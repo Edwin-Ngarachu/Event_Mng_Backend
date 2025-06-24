@@ -8,6 +8,7 @@ from .models import Event
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
+import json
 
 
 class RegisterView(APIView):
@@ -48,7 +49,15 @@ class EventCreateView(APIView):
     def post(self, request):
         if request.user.role != 'poster':
             return Response({'error': 'Only posters can create events.'}, status=status.HTTP_403_FORBIDDEN)
-        serializer = EventSerializer(data=request.data, context={'request': request})
+        data = request.data.copy()
+        tickets_json = data.get('tickets')
+        if tickets_json:
+            try:
+                data['tickets'] = json.loads(tickets_json)
+            except Exception:
+                data['tickets'] = []
+        print("TICKETS FIELD:", data.get('tickets'))  # <-- Add this line here
+        serializer = EventSerializer(data=data, context={'request': request})
         if serializer.is_valid():
             serializer.save(poster=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -83,6 +92,10 @@ class EventDeleteView(APIView):
         event.delete()
         return Response({'message': 'Event deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
+
+
+
+
 class EventUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -94,7 +107,14 @@ class EventUpdateView(APIView):
             return Response({'error': 'Event not found.'}, status=status.HTTP_404_NOT_FOUND)
         if event.poster != request.user:
             return Response({'error': 'You can only edit your own events.'}, status=status.HTTP_403_FORBIDDEN)
-        serializer = EventSerializer(event, data=request.data, partial=True, context={'request': request})
+        data = request.data.copy()
+        tickets_json = data.get('tickets')
+        if tickets_json:
+            try:
+                data['tickets'] = json.loads(tickets_json)
+            except Exception:
+                data['tickets'] = []
+        serializer = EventSerializer(event, data=data, partial=True, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

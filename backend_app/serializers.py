@@ -1,7 +1,7 @@
 # backend_app/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Event
+from .models import Event, TicketType
 User = get_user_model()
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -29,16 +29,49 @@ class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
+
+
+class TicketTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TicketType
+        fields = ['id', 'name', 'price', 'quantity']
+
 class EventSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(required=False, allow_null=True)
+    tickets = TicketTypeSerializer(many=True, required=False)
 
     class Meta:
         model = Event
         fields = [
             'id', 'title', 'description', 'date', 'poster', 'image', 'created_at',
-            'location', 'duration'  
+            'location', 'duration', 'tickets'
         ]
         read_only_fields = ['poster', 'created_at']
+
+    def create(self, validated_data):
+      tickets_data = self.initial_data.get('tickets', [])
+      if isinstance(tickets_data, str):
+        import json
+        tickets_data = json.loads(tickets_data)
+      print("SERIALIZER tickets_data:", tickets_data)
+      event = Event.objects.create(**validated_data)
+      for ticket_data in tickets_data:
+        print("Creating ticket:", ticket_data)
+        TicketType.objects.create(event=event, **ticket_data)
+      return event
+
+    def update(self, instance, validated_data):
+        tickets_data = self.initial_data.get('tickets', None)
+        if isinstance(tickets_data, str):
+            import json
+            tickets_data = json.loads(tickets_data)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if tickets_data is not None:
+            instance.tickets.all().delete()
+            for ticket_data in tickets_data:
+                TicketType.objects.create(event=instance, **ticket_data)
+        return instance
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
