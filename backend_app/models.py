@@ -1,6 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-
+from django.conf import settings
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, role='booker', **extra_fields):
         if not email:
@@ -58,3 +58,12 @@ class TicketType(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.event.title}"
+
+
+class Booking(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookings')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    ticket_type = models.ForeignKey(TicketType, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    booked_at = models.DateTimeField(auto_now_add=True)
+    ticket_number = models.CharField(max_length=100)
