@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import dj_database_url
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -93,15 +95,19 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'events_db',     # Database name (create it first in pgAdmin/psql)
+#         'USER': 'events_db_user',         # Default superuser (or create a dedicated user)
+#         'PASSWORD': '123456', # Password you set during installation
+#         'HOST': 'localhost',        # Or your PostgreSQL server IP
+#         'PORT': '5432',             # Default PostgreSQL port
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'events_db',     # Database name (create it first in pgAdmin/psql)
-        'USER': 'events_db_user',         # Default superuser (or create a dedicated user)
-        'PASSWORD': '123456', # Password you set during installation
-        'HOST': 'localhost',        # Or your PostgreSQL server IP
-        'PORT': '5432',             # Default PostgreSQL port
-    }
+ # the link here is the external link provided on postgresql web service db
+ "default": dj_database_url.parse("postgresql://capstone_p502_user:9up931zf4KCkAaara82NxJ0MVn8VTMid@dpg-d1o2er8dl3ps73fnhmq0-a.oregon-postgres.render.com/capstone_p502")
 }
 
 # Password validation
@@ -138,7 +144,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 
 MEDIA_URL = '/media/'
